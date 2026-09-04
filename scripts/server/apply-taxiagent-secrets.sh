@@ -10,6 +10,7 @@ NAMESPACE="taxiagent"
 SECRET_NAME="taxiagent-secrets"
 
 REQUIRED_KEYS="MYSQL_ROOT_PASSWORD TAXIAGENT_DB_PASSWORD NACOS_AUTH_TOKEN NACOS_AUTH_IDENTITY_KEY NACOS_AUTH_IDENTITY_VALUE NACOS_PASSWORD DASHSCOPE_API_KEY DEEPSEEK_API_KEY AMAP_KEY QWEATHER_KEY QWEATHER_TOKEN"
+CORE_KEYS="MYSQL_ROOT_PASSWORD TAXIAGENT_DB_PASSWORD NACOS_AUTH_TOKEN NACOS_AUTH_IDENTITY_KEY NACOS_AUTH_IDENTITY_VALUE NACOS_PASSWORD"
 OPTIONAL_WARN_KEYS="DASHSCOPE_API_KEY DEEPSEEK_API_KEY AMAP_KEY QWEATHER_KEY QWEATHER_TOKEN"
 DB_SERVICES="USER AUTH ORDER TICKET RAG AGENT"
 
@@ -37,16 +38,21 @@ esac
 declare -A VALUES
 missing=""
 for key in $REQUIRED_KEYS; do
-  val=$(grep -E "^${key}=" "$SECRETS_FILE" | head -1 | cut -d= -f2- || true)
-  if [[ -z "${val:-}" ]]; then
+  if ! grep -qE "^${key}=" "$SECRETS_FILE"; then
     missing="$missing $key"
-  else
-    VALUES["$key"]="$val"
+    continue
   fi
+  val=$(grep -E "^${key}=" "$SECRETS_FILE" | head -1 | cut -d= -f2- || true)
+  VALUES["$key"]="$val"
 done
 if [[ -n "$missing" ]]; then
-  die "missing keys in $SECRETS_FILE:$missing"
+  die "absent keys in $SECRETS_FILE:$missing"
 fi
+for key in $CORE_KEYS; do
+  if [[ -z "${VALUES[$key]}" ]]; then
+    die "${key} is empty in $SECRETS_FILE"
+  fi
+done
 for key in $OPTIONAL_WARN_KEYS; do
   if [[ -z "${VALUES[$key]}" ]]; then
     log "WARNING: ${key} is empty (API calls using it will fail at runtime)"
