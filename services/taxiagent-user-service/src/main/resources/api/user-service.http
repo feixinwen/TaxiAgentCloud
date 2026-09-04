@@ -1,0 +1,3 @@
+### Check whether TaxiAgent User Service is responding
+GET http://localhost:8081/api/users/ping
+Accept: application/json

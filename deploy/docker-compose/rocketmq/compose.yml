@@ -1,0 +1,37 @@
+name: taxiagent-rocketmq
+
+services:
+  namesrv:
+    image: apache/rocketmq:5.1.0
+    container_name: taxiagent-rocketmq-namesrv
+    restart: unless-stopped
+    command: sh mqnamesrv
+    ports:
+      - "127.0.0.1:9876:9876"
+
+  broker:
+    image: apache/rocketmq:5.1.0
+    container_name: taxiagent-rocketmq-broker
+    restart: unless-stopped
+    command: sh mqbroker -n namesrv:9876 -c /home/rocketmq/conf/broker-ip.conf
+    depends_on:
+      - namesrv
+    ports:
+      - "127.0.0.1:10911:10911"
+      - "127.0.0.1:10909:10909"
+    environment:
+      - NAMESRV_ADDR=namesrv:9876
+    volumes:
+      - ./broker-ip.conf:/home/rocketmq/conf/broker-ip.conf:ro
+
+  dashboard:
+    image: apacherocketmq/rocketmq-dashboard:latest
+    container_name: taxiagent-rocketmq-dashboard
+    restart: unless-stopped
+    depends_on:
+      - namesrv
+    ports:
+      # 最新版 dashboard 镜像内 Tomcat 监听 8082（非 8080），映射到宿主机 8085
+      - "127.0.0.1:8085:8082"
+    environment:
+      - JAVA_OPTS=-Drocketmq.namesrv.addr=namesrv:9876

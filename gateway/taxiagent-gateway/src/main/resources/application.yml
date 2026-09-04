@@ -1,0 +1,66 @@
+server:
+  port: 9000
+
+spring:
+  application:
+    name: taxiagent-gateway
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:127.0.0.1}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:}
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: auth-service
+              uri: lb://taxiagent-auth-service
+              predicates:
+                - Path=/api/auth/**
+            - id: auth-user-management
+              uri: lb://taxiagent-auth-service
+              predicates:
+                - Path=/api/users/current/**,/api/users/admin/**
+            - id: user-service
+              uri: lb://taxiagent-user-service
+              predicates:
+                - Path=/api/users/**
+            - id: rag-service
+              uri: lb://taxiagent-rag-service
+              predicates:
+                - Path=/api/rag/**
+            - id: agent-service
+              uri: lb://taxiagent-agent-service
+              predicates:
+                - Path=/api/agent/**
+            - id: order-service
+              uri: lb://taxiagent-order-service
+              predicates:
+                - Path=/api/orders/**
+            - id: ticket-service
+              uri: lb://taxiagent-ticket-service
+              predicates:
+                - Path=/api/tickets/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+
+taxiagent:
+  gateway:
+    jwt:
+      issuer: ${GATEWAY_JWT_ISSUER:https://auth.taxiagent.internal}
+      audience: ${GATEWAY_JWT_AUDIENCE:taxiagent-api}
+      public-key-location: ${GATEWAY_JWT_PUBLIC_KEY_LOCATION:}

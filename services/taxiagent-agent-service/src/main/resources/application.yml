@@ -1,0 +1,78 @@
+server:
+  port: 8087
+
+spring:
+  application:
+    name: taxiagent-agent-service
+  datasource:
+    url: ${AGENT_DB_URL:jdbc:mysql://127.0.0.1:3307/taxiagent_agent?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai}
+    username: ${AGENT_DB_USERNAME:taxiagent}
+    password: ${AGENT_DB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    validate-on-migrate: true
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:127.0.0.1}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:}
+  ai:
+    dashscope:
+      api-key: ${DASHSCOPE_API_KEY:}
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+
+taxiagent:
+  agent:
+    jwt:
+      issuer: ${AGENT_JWT_ISSUER:https://auth.taxiagent.internal}
+      audience: ${AGENT_JWT_AUDIENCE:taxiagent-api}
+      public-key-location: ${AGENT_JWT_PUBLIC_KEY_LOCATION:}
+    id:
+      worker-id: ${AGENT_ID_WORKER_ID:4}
+      datacenter-id: ${AGENT_ID_DATACENTER_ID:0}
+    execution:
+      run-timeout: 60s
+      lock-ttl: 90s
+      sse-timeout: 65s
+      heartbeat-interval: 15s
+      max-model-rounds: 5
+      max-tool-calls: 8
+    classifier:
+      model: qwen3-max-preview
+      temperature: 0.5
+      max-history-text: 500
+      timeout-seconds: 5
+    model:
+      api-key: ${DEEPSEEK_API_KEY:}
+      base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
+      name: ${DEEPSEEK_MODEL:deepseek-chat}
+      prompt-version: support-v1
+
+qweather:
+  url: ${QWEATHER_URL:https://jv57rn22g2.re.qweatherapi.com}
+  key: ${QWEATHER_KEY:}
+  token: ${QWEATHER_TOKEN:}
+  timeout-seconds: 5
+amap:
+  url: ${AMAP_URL:https://restapi.amap.com/v3}
+  key: ${AMAP_KEY:}

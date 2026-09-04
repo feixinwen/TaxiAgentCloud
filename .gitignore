@@ -1,0 +1,79 @@
+# Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Maven wrapper JAR is intentionally tracked when added
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+.vscode/
+.settings/
+.classpath
+.project
+*.iml
+*.iws
+*.ipr
+
+# Operating systems
+.DS_Store
+Thumbs.db
+
+# Logs and runtime files
+logs/
+*.log
+*.pid
+*.hprof
+hs_err_pid*
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+application-local.yml
+application-local.yaml
+application-secret.yml
+application-secret.yaml
+secrets/
+
+# Test and coverage output
+coverage/
+*.exec
+
+# Python (smoke scripts)
+__pycache__/
+*.py[cod]
+
+# Frontend artifacts (if a frontend is added later)
+node_modules/
+dist/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.swp
+*~
+deploy/docker-compose/elasticsearch/ik.zip
+
+# Local CodeGraph index
+/.codegraph/
+
+# Local isolated implementation worktrees
+/.worktrees/
+
+# Internal project summary (not for GitHub)
+/BUG-LOG.md
+
+# AI collaboration & design docs (local only, not for GitHub)
+/CLAUDE.md
+/AGENTS.md
+/docs/
+/wiki/
+
+# Local AI tool config
+/.claude/
+/.superpowers/

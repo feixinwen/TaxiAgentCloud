@@ -1,0 +1,15 @@
+### Route a user-service request through TaxiAgent Gateway
+GET http://localhost:9000/api/users/ping
+Accept: application/json
+X-Trace-Id: local-gateway-check
+
+### Route an auth-service request through TaxiAgent Gateway
+GET http://localhost:9000/api/auth/ping
+Accept: application/json
+X-Trace-Id: local-auth-gateway-check
+
+### Protected routes require a JWT issued by Auth Service
+@accessToken = replace-with-access-token
+GET http://localhost:9000/api/users/private-example
+Accept: application/json
+Authorization: Bearer {{accessToken}}
