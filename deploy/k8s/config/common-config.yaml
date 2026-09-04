@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: taxiagent-common
+  namespace: taxiagent
+data:
+  TAXIAGENT_ENV: "test"
+
+  # ---- 数据库（每服务独立库，统一应用账号 taxiagent，密码走 Secret 的 *_DB_PASSWORD）----
+  USER_DB_URL: "jdbc:mysql://mysql:3306/taxiagent_user?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
+  AUTH_DB_URL: "jdbc:mysql://mysql:3306/taxiagent_auth?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
+  ORDER_DB_URL: "jdbc:mysql://mysql:3306/taxiagent_order?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
+  TICKET_DB_URL: "jdbc:mysql://mysql:3306/taxiagent_ticket?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
+  RAG_DB_URL: "jdbc:mysql://mysql:3306/taxiagent_rag?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
+  AGENT_DB_URL: "jdbc:mysql://mysql:3306/taxiagent_agent?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
+  USER_DB_USERNAME: "taxiagent"
+  AUTH_DB_USERNAME: "taxiagent"
+  ORDER_DB_USERNAME: "taxiagent"
+  TICKET_DB_USERNAME: "taxiagent"
+  RAG_DB_USERNAME: "taxiagent"
+  AGENT_DB_USERNAME: "taxiagent"
+
+  # ---- 共享中间件 ----
+  SPRING_DATA_REDIS_HOST: "redis"
+  SPRING_DATA_REDIS_PORT: "6379"
+  NACOS_SERVER_ADDR: "nacos:8848"
+  NACOS_USERNAME: "nacos"
+  SPRING_MAIL_HOST: "mailpit"
+  SPRING_MAIL_PORT: "1025"
+  ROCKETMQ_NAME_SERVER: "rocketmq-namesrv:9876"
+  # auth 的 consumer 默认关闭，集群运行时必须开启（user 的 producer 默认已开）
+  ROCKETMQ_ENABLED: "true"
+
+  # ---- JWT（密钥文件由 Secret 卷挂载到 /app/secrets）----
+  GATEWAY_JWT_ISSUER: "https://auth.taxiagent.internal"
+  GATEWAY_JWT_AUDIENCE: "taxiagent-api"
+  USER_JWT_ISSUER: "https://auth.taxiagent.internal"
+  USER_JWT_AUDIENCE: "taxiagent-api"
+  AUTH_JWT_ISSUER: "https://auth.taxiagent.internal"
+  AUTH_JWT_AUDIENCE: "taxiagent-api"
+  ORDER_JWT_ISSUER: "https://auth.taxiagent.internal"
+  ORDER_JWT_AUDIENCE: "taxiagent-api"
+  TICKET_JWT_ISSUER: "https://auth.taxiagent.internal"
+  TICKET_JWT_AUDIENCE: "taxiagent-api"
+  RAG_JWT_ISSUER: "https://auth.taxiagent.internal"
+  RAG_JWT_AUDIENCE: "taxiagent-api"
+  AGENT_JWT_ISSUER: "https://auth.taxiagent.internal"
+  AGENT_JWT_AUDIENCE: "taxiagent-api"
+
+  # 公钥/私钥文件位置（Secret 卷挂载到 /app/secrets）
+  GATEWAY_JWT_PUBLIC_KEY_LOCATION: "file:/app/secrets/jwt-public.pem"
+  USER_JWT_PUBLIC_KEY_LOCATION: "file:/app/secrets/jwt-public.pem"
+  AUTH_JWT_PUBLIC_KEY_LOCATION: "file:/app/secrets/jwt-public.pem"
+  AUTH_JWT_PRIVATE_KEY_LOCATION: "file:/app/secrets/jwt-private.pem"
+  ORDER_JWT_PUBLIC_KEY_LOCATION: "file:/app/secrets/jwt-public.pem"
+  TICKET_JWT_PUBLIC_KEY_LOCATION: "file:/app/secrets/jwt-public.pem"
+  RAG_JWT_PUBLIC_KEY_LOCATION: "file:/app/secrets/jwt-public.pem"
+  AGENT_JWT_PUBLIC_KEY_LOCATION: "file:/app/secrets/jwt-public.pem"
