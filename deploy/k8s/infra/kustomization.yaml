@@ -4,3 +4,7 @@ resources:
   - mysql
   - redis
   - nacos
+  - mongodb
+  - elasticsearch
+  - rocketmq
+  - mailpit

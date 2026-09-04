@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rocketmq-namesrv
+  namespace: taxiagent
+  labels:
+    app: rocketmq-namesrv
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rocketmq-namesrv
+  template:
+    metadata:
+      labels:
+        app: rocketmq-namesrv
+    spec:
+      containers:
+        - name: namesrv
+          image: apache/rocketmq:5.1.0
+          imagePullPolicy: IfNotPresent
+          command: ["sh", "mqnamesrv"]
+          ports:
+            - name: namesrv
+              containerPort: 9876
+          readinessProbe:
+            tcpSocket:
+              port: namesrv
+            periodSeconds: 10
+            failureThreshold: 12
+          livenessProbe:
+            tcpSocket:
+              port: namesrv
+            periodSeconds: 20
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - name: store
+              mountPath: /home/rocketmq/store
+            - name: logs
+              mountPath: /home/rocketmq/logs
+      volumes:
+        - name: store
+          emptyDir: {}
+        - name: logs
+          emptyDir: {}

@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rocketmq-broker
+  namespace: taxiagent
+spec:
+  type: ClusterIP
+  selector:
+    app: rocketmq-broker
+  ports:
+    - name: remoting
+      port: 10911
+      targetPort: 10911
+    - name: vip
+      port: 10909
+      targetPort: 10909
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rocketmq-broker-headless
+  namespace: taxiagent
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app: rocketmq-broker
+  ports:
+    - name: remoting
+      port: 10911
+      targetPort: 10911

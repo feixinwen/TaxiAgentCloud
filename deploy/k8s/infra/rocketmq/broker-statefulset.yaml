@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rocketmq-broker
+  namespace: taxiagent
+  labels:
+    app: rocketmq-broker
+spec:
+  serviceName: rocketmq-broker-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rocketmq-broker
+  template:
+    metadata:
+      labels:
+        app: rocketmq-broker
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: broker
+          image: apache/rocketmq:5.1.0
+          imagePullPolicy: IfNotPresent
+          # brokerIP1 用 Pod IP（downward API），避免写入宿主机 LAN 地址；重启后自动向 Namesrv 重新注册
+          command:
+            - sh
+            - -c
+            - |
+              printf 'brokerIP1=%s\nbrokerName=broker-a\nbrokerClusterName=DefaultCluster\nbrokerId=0\nstorePathRootDir=/home/rocketmq/store\nstorePathCommitLog=/home/rocketmq/store/commitlog\nautoCreateTopicEnable=true\n' "$POD_IP" > /home/rocketmq/rocketmq-5.1.0/conf/broker-k8s.conf
+              exec /home/rocketmq/rocketmq-5.1.0/bin/mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/rocketmq-5.1.0/conf/broker-k8s.conf
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: NAMESRV_ADDR
+              value: rocketmq-namesrv:9876
+            # broker 默认按宿主机内存给 JVM 8g 堆，必须压到容器限额内
+            - name: JAVA_OPT_EXT
+              value: "-Xms1g -Xmx1g -Xmn512m"
+          ports:
+            - name: remoting
+              containerPort: 10911
+          readinessProbe:
+            tcpSocket:
+              port: remoting
+            periodSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            tcpSocket:
+              port: remoting
+            periodSeconds: 20
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              memory: 3Gi
+          volumeMounts:
+            - name: store
+              mountPath: /home/rocketmq/store
+  volumeClaimTemplates:
+    - metadata:
+        name: store
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 5Gi
