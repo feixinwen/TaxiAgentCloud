@@ -77,3 +77,8 @@ deploy/docker-compose/elasticsearch/ik.zip
 # Local AI tool config
 /.claude/
 /.superpowers/
+
+# K3s deployment secrets (never commit; *.example files stay tracked)
+deploy/k8s/**/secret.yaml
+deploy/k8s/**/htpasswd
+*.secret.env

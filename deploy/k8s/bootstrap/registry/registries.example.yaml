@@ -1,0 +1,11 @@
+# 结构示例，真实文件由 scripts/server/configure-k3s-registry.sh 生成到
+# /etc/rancher/k3s/registries.yaml（权限 0600），此文件不含真实凭据。
+mirrors:
+  "10.243.194.108:30500":
+    endpoint:
+      - "http://10.243.194.108:30500"
+configs:
+  "10.243.194.108:30500":
+    auth:
+      username: "REPLACE_WITH_USERNAME"
+      password: "REPLACE_WITH_PASSWORD"

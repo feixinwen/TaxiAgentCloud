@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taxiagent-registry
+  namespace: registry
+  labels:
+    app: taxiagent-registry
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: taxiagent-registry
+  template:
+    metadata:
+      labels:
+        app: taxiagent-registry
+    spec:
+      securityContext:
+        fsGroup: 1000
+      initContainers:
+        - name: fix-volume-permissions
+          image: registry:2.8.3
+          imagePullPolicy: IfNotPresent
+          command: ["sh", "-c", "chown -R 1000:1000 /var/lib/registry"]
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/registry
+      containers:
+        - name: registry
+          image: registry:2.8.3
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+          env:
+            - name: REGISTRY_STORAGE_DELETE_ENABLED
+              value: "true"
+            - name: REGISTRY_AUTH
+              value: htpasswd
+            - name: REGISTRY_AUTH_HTPASSWD_REALM
+              value: "TaxiAgent Registry"
+            - name: REGISTRY_AUTH_HTPASSWD_PATH
+              value: /auth/htpasswd
+          ports:
+            - name: registry
+              containerPort: 5000
+          readinessProbe:
+            tcpSocket:
+              port: registry
+            periodSeconds: 10
+            failureThreshold: 12
+          livenessProbe:
+            tcpSocket:
+              port: registry
+            periodSeconds: 20
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/registry
+            - name: auth
+              mountPath: /auth
+              readOnly: true
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: registry-data
+        - name: auth
+          secret:
+            secretName: registry-auth
+            items:
+              - key: htpasswd
+                path: htpasswd
