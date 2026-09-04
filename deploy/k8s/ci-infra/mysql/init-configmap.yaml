@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-ci-init-test-databases
+  namespace: taxiagent-ci
+data:
+  # 官方 mysql 镜像首次空数据卷启动时按字典序执行 /docker-entrypoint-initdb.d/*.sh
+  01-init-test-databases.sh: |
+    #!/bin/sh
+    set -e
+    mysql_cmd() {
+      mysql --protocol=socket -uroot -p"${MYSQL_ROOT_PASSWORD}" -e "$1"
+    }
+    for db in taxiagent_user_test taxiagent_auth_test taxiagent_order_test taxiagent_ticket_test taxiagent_rag_test taxiagent_agent_test; do
+      mysql_cmd "CREATE DATABASE IF NOT EXISTS \`${db}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci"
+    done
+    # 表结构不在此创建：由各服务测试启动时的 Flyway migrate 生成
+    mysql_cmd "CREATE USER IF NOT EXISTS '${CI_MYSQL_ADMIN_USER}'@'%' IDENTIFIED BY '${CI_MYSQL_ADMIN_PASSWORD}'"
+    for db in taxiagent_user_test taxiagent_auth_test taxiagent_order_test taxiagent_ticket_test taxiagent_rag_test taxiagent_agent_test; do
+      mysql_cmd "GRANT ALL PRIVILEGES ON \`${db}\`.* TO '${CI_MYSQL_ADMIN_USER}'@'%'"
+    done
+    mysql_cmd "FLUSH PRIVILEGES"

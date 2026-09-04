@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  namespace: taxiagent-ci
+  labels:
+    app: redis
+    taxiagent.io/ci-data-store: "true"
+spec:
+  serviceName: redis-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+        taxiagent.io/ci-data-store: "true"
+    spec:
+      serviceAccountName: ci-data-access
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          imagePullPolicy: IfNotPresent
+          args:
+            - --appendonly
+            - "yes"
+            - --requirepass
+            - $(CI_REDIS_PASSWORD)
+          envFrom:
+            - secretRef:
+                name: taxiagent-ci-secrets
+          env:
+            # redis-cli 读取该环境变量自动带认证，避免探针命令行暴露密码
+            - name: REDISCLI_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: taxiagent-ci-secrets
+                  key: CI_REDIS_PASSWORD
+          ports:
+            - name: redis
+              containerPort: 6379
+          readinessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            periodSeconds: 20
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          volumeMounts:
+            - name: data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 2Gi

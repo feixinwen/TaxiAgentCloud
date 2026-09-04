@@ -1,0 +1,16 @@
+# 运行时数据实例入口隔离：taxiagent namespace 内带 taxiagent.io/data-store=true 的
+# Pod（MySQL/Redis/MongoDB/ES）只允许本 namespace 的业务 Pod 访问，
+# 拒绝 taxiagent-ci / jenkins 等跨 namespace 连接——Jenkins Agent 只能触达 CI 测试实例。
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: runtime-data-ingress
+  namespace: taxiagent
+spec:
+  podSelector:
+    matchLabels:
+      taxiagent.io/data-store: "true"
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - podSelector: {}

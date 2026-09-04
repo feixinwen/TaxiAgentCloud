@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+  namespace: taxiagent-ci
+  labels:
+    app: mysql
+    taxiagent.io/ci-data-store: "true"
+spec:
+  serviceName: mysql-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+        taxiagent.io/ci-data-store: "true"
+    spec:
+      serviceAccountName: ci-data-access
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: mysql
+          image: mysql:8.4.8
+          imagePullPolicy: IfNotPresent
+          args:
+            - --character-set-server=utf8mb4
+            - --collation-server=utf8mb4_0900_ai_ci
+          envFrom:
+            - secretRef:
+                name: taxiagent-ci-secrets
+          env:
+            # 官方镜像入口用 MYSQL_ROOT_PASSWORD 初始化 root；值复用 CI 管理员密码
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: taxiagent-ci-secrets
+                  key: CI_MYSQL_ADMIN_PASSWORD
+          ports:
+            - name: mysql
+              containerPort: 3306
+          startupProbe:
+            exec:
+              command: ["sh", "-c", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$MYSQL_ROOT_PASSWORD\" --silent"]
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$MYSQL_ROOT_PASSWORD\" --silent"]
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$MYSQL_ROOT_PASSWORD\" --silent"]
+            periodSeconds: 20
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+            - name: init-scripts
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: init-scripts
+          configMap:
+            name: mysql-ci-init-test-databases
+            defaultMode: 0755
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 10Gi

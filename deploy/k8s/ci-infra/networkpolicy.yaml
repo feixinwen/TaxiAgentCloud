@@ -1,0 +1,22 @@
+# CI 测试实例入口隔离：只有 jenkins namespace 内带 taxiagent.io/ci-data-access=true
+# 标签的 Pod（Jenkins Agent）能访问 taxiagent-ci 的数据实例；kubelet 健康检查流量
+# 来自宿主机，不受 Pod 间 NetPol 限制。
+# 注意：Jenkins Agent Pod 必须带该标签，否则 CI 数据库完全不可达。
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ci-data-ingress
+  namespace: taxiagent-ci
+spec:
+  podSelector:
+    matchLabels:
+      taxiagent.io/ci-data-store: "true"
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: jenkins
+          podSelector:
+            matchLabels:
+              taxiagent.io/ci-data-access: "true"

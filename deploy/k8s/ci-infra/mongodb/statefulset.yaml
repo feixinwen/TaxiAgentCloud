@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongodb
+  namespace: taxiagent-ci
+  labels:
+    app: mongodb
+    taxiagent.io/ci-data-store: "true"
+spec:
+  serviceName: mongodb-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+        taxiagent.io/ci-data-store: "true"
+    spec:
+      serviceAccountName: ci-data-access
+      containers:
+        - name: mongodb
+          image: mongo:8.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: taxiagent-ci-secrets
+                  key: CI_MONGODB_USER
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: taxiagent-ci-secrets
+                  key: CI_MONGODB_PASSWORD
+          ports:
+            - name: mongodb
+              containerPort: 27017
+          # db.adminCommand('ping') 无需认证即可执行，探针可保持无凭据
+          readinessProbe:
+            exec:
+              command: ["mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+            periodSeconds: 10
+            failureThreshold: 12
+          livenessProbe:
+            exec:
+              command: ["mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+            periodSeconds: 20
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              memory: 3Gi
+          volumeMounts:
+            - name: data
+              mountPath: /data/db
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 5Gi
