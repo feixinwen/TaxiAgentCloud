@@ -7,6 +7,9 @@ SECRETS_FILE="/opt/taxiagent/secrets/registry.env"
 ENDPOINT="http://10.243.194.108:30500"
 REGISTRIES_YAML="/etc/rancher/k3s/registries.yaml"
 NODE_IP="10.243.194.108"
+# Domestic docker.io mirrors (direct, fast); the node's proxy env covers the fallback path.
+DOCKER_HUB_MIRROR_1="https://docker.1ms.run"
+DOCKER_HUB_MIRROR_2="https://docker.1panel.live"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -36,6 +39,10 @@ REGISTRY_PASSWORD=$(grep -E '^REGISTRY_PASSWORD=' "$SECRETS_FILE" | head -1 | cu
 umask 077
 cat > "$REGISTRIES_YAML" <<EOF
 mirrors:
+  "docker.io":
+    endpoint:
+      - "${DOCKER_HUB_MIRROR_1}"
+      - "${DOCKER_HUB_MIRROR_2}"
   "${NODE_IP}:30500":
     endpoint:
       - "${ENDPOINT}"
