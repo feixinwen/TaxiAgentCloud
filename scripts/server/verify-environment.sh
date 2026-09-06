@@ -17,13 +17,13 @@ k3s kubectl get nodes --no-headers 2>/dev/null | grep -q ' Ready ' \
 # ---------- pvcs ----------
 pvcs="$(k3s kubectl get pvc -A --no-headers 2>/dev/null)"
 [[ -n "$pvcs" ]] || die "no PVCs found"
-unbound="$(printf '%s\n' "$pvcs" | awk '$3 != "Bound" {print}')"
+unbound="$(printf '%s\n' "$pvcs" | awk '$2 != "Bound" {print}')"
 [[ -z "$unbound" ]] || die "unbound PVCs: $(printf '%s\n' "$unbound" | head -5 | tr '\n' ';')"
 
 # ---------- pods ----------
 pods="$(k3s kubectl get pods -A --no-headers 2>/dev/null)"
 [[ -n "$pods" ]] || die "no pods found"
-notready="$(printf '%s\n' "$pods" | awk '$3 != "Running" && $3 != "Completed" {print}')"
+notready="$(printf '%s\n' "$pods" | awk '$4 != "Running" && $4 != "Completed" {print}')"
 [[ -z "$notready" ]] || die "pods not running: $(printf '%s\n' "$notready" | head -5 | tr '\n' ';')"
 
 # ---------- ingress ----------
