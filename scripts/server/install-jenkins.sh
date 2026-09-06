@@ -13,6 +13,7 @@ ADMIN_SECRET="jenkins-admin"
 REGISTRY_SECRET="jenkins-registry"
 VALUES_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/deploy/k8s/bootstrap/jenkins/values.yaml"
 JENKINS_URL="http://10.243.194.108:30080"
+export KUBECONFIG="${KUBECONFIG:-/etc/rancher/k3s/k3s.yaml}"
 
 log() { printf '[jenkins] %s\n' "$*"; }
 die() { printf '[jenkins] ERROR: %s\n' "$*" >&2; exit 1; }
