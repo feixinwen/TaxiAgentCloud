@@ -1,0 +1,57 @@
+# Jenkins Controller values for the jenkinsci/jenkins Helm chart (pinned in install-jenkins.sh).
+# Credentials are never inline: admin and registry secrets live in Kubernetes secrets
+# created by install-jenkins.sh from /opt/taxiagent/secrets (never committed).
+controller:
+  image:
+    registry: docker.io
+    repository: jenkins/jenkins
+    tag: "2.568.2-jdk21"
+    pullPolicy: IfNotPresent
+  numExecutors: 0
+  admin:
+    username: admin
+    createSecret: false
+    existingSecret: jenkins-admin
+    userKey: jenkins-admin-user
+    passwordKey: jenkins-admin-password
+  serviceType: NodePort
+  servicePort: 8080
+  nodePort: 30080
+  healthProbes: true
+  containerEnv:
+    - name: HTTP_PROXY
+      value: "http://10.243.150.36:7897"
+    - name: HTTPS_PROXY
+      value: "http://10.243.150.36:7897"
+    - name: NO_PROXY
+      value: "127.0.0.1,localhost,::1,.svc,.cluster.local,10.42.0.0/16,10.43.0.0/16,10.243.0.0/16,10.243.194.108"
+  JCasC:
+    defaultConfig: true
+    overwriteConfiguration: false
+    configScripts:
+      taxiagent-job: |-
+        jobs:
+          taxiagent-deploy: |-
+            workflowJob('taxiagent-deploy') {
+              parameters {
+                stringParam('GIT_REF', 'main', 'Git branch/tag/commit SHA to build and deploy')
+                booleanParam('RUN_E2E', true, 'Run the non-billing E2E after deployment')
+              }
+              definition {
+                cpsScm {
+                  scm {
+                    git {
+                      remote {
+                        url('https://github.com/feixinwen/TaxiAgentCloud.git')
+                      }
+                      branches('main')
+                    }
+                  }
+                  scriptPath('Jenkinsfile')
+                  lightweight(true)
+                }
+              }
+            }
+persistence:
+  enabled: true
+  size: "10Gi"
