@@ -17,7 +17,7 @@ k3s kubectl get nodes --no-headers 2>/dev/null | grep -q ' Ready ' \
 # ---------- pvcs ----------
 pvcs="$(k3s kubectl get pvc -A --no-headers 2>/dev/null)"
 [[ -n "$pvcs" ]] || die "no PVCs found"
-unbound="$(printf '%s\n' "$pvcs" | awk '$2 != "Bound" {print}')"
+unbound="$(printf '%s\n' "$pvcs" | awk '$3 != "Bound" {print}')"
 [[ -z "$unbound" ]] || die "unbound PVCs: $(printf '%s\n' "$unbound" | head -5 | tr '\n' ';')"
 
 # ---------- pods ----------
