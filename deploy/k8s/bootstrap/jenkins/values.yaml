@@ -42,27 +42,27 @@ controller:
     configScripts:
       taxiagent-job: |-
         jobs:
-          taxiagent-deploy: |-
-            workflowJob('taxiagent-deploy') {
-              parameters {
-                stringParam('GIT_REF', 'main', 'Git branch/tag/commit SHA to build and deploy')
-                booleanParam('RUN_E2E', true, 'Run the non-billing E2E after deployment')
-              }
-              definition {
-                cpsScm {
-                  scm {
-                    git {
-                      remote {
-                        url('https://github.com/feixinwen/TaxiAgentCloud.git')
+          - script: >
+              workflowJob('taxiagent-deploy') {
+                parameters {
+                  stringParam('GIT_REF', 'main', 'Git branch/tag/commit SHA to build and deploy')
+                  booleanParam('RUN_E2E', true, 'Run the non-billing E2E after deployment')
+                }
+                definition {
+                  cpsScm {
+                    scm {
+                      git {
+                        remote {
+                          url('https://github.com/feixinwen/TaxiAgentCloud.git')
+                        }
+                        branches('main')
                       }
-                      branches('main')
                     }
+                    scriptPath('Jenkinsfile')
+                    lightweight(true)
                   }
-                  scriptPath('Jenkinsfile')
-                  lightweight(true)
                 }
               }
-            }
 persistence:
   enabled: true
   size: "10Gi"
