@@ -8,6 +8,8 @@ controller:
     tag: "2.568.2-jdk21"
     pullPolicy: IfNotPresent
   numExecutors: 0
+  additionalPlugins:
+    - job-dsl
   admin:
     username: admin
     createSecret: false
