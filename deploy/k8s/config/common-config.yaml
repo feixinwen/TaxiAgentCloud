@@ -23,6 +23,7 @@ data:
   # ---- 共享中间件 ----
   SPRING_DATA_REDIS_HOST: "redis"
   SPRING_DATA_REDIS_PORT: "6379"
+  RAG_ES_URIS: "http://elasticsearch:9200"
   NACOS_SERVER_ADDR: "nacos:8848"
   NACOS_USERNAME: "nacos"
   SPRING_MAIL_HOST: "mailpit"
