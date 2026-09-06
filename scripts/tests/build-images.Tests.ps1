@@ -60,3 +60,10 @@ Describe 'Client nginx reverse proxy' {
         $nginx | Should -Match 'proxy_read_timeout 90s;'
     }
 }
+
+Describe 'Client image runs as non-root' {
+    It 'declares the nginx user in the Dockerfile' {
+        $dockerfile = Get-Content -Raw (Join-Path $PSScriptRoot '..\..\services\taxiagent-client-service\Dockerfile')
+        $dockerfile | Should -Match 'USER nginx'
+    }
+}
