@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: taxiagent-client
+  namespace: taxiagent
+  annotations:
+    traefik.ingress.kubernetes.io/service.transport.responseForwarding.flushInterval: "1ms"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: taxiagent-client-service
+                port:
+                  number: 80

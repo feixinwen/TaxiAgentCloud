@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taxiagent-user-service
+  namespace: taxiagent
+  labels:
+    app: taxiagent-user-service
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: taxiagent-user-service
+  template:
+    metadata:
+      labels:
+        app: taxiagent-user-service
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: taxiagent-user-service
+          image: 10.243.194.108:30500/taxiagent/taxiagent-user-service:IMAGE_TAG
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: taxiagent-common
+            - secretRef:
+                name: taxiagent-secrets
+          ports:
+            - name: http
+              containerPort: 8081
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            failureThreshold: 30
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              memory: 768Mi
+          volumeMounts:
+            - name: jwt-keys
+              mountPath: /app/secrets
+              readOnly: true
+      volumes:
+        - name: jwt-keys
+          secret:
+            secretName: taxiagent-secrets
+            items:
+              - key: jwt-public.pem
+                path: jwt-public.pem

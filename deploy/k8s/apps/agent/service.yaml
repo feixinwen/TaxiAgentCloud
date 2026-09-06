@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: taxiagent-agent-service
+  namespace: taxiagent
+spec:
+  type: ClusterIP
+  selector:
+    app: taxiagent-agent-service
+  ports:
+    - name: http
+      port: 8087
+      targetPort: http

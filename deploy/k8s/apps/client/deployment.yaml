@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taxiagent-client-service
+  namespace: taxiagent
+  labels:
+    app: taxiagent-client-service
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: taxiagent-client-service
+  template:
+    metadata:
+      labels:
+        app: taxiagent-client-service
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: taxiagent-client-service
+          image: 10.243.194.108:30500/taxiagent/taxiagent-client-service:IMAGE_TAG
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: taxiagent-common
+            - secretRef:
+                name: taxiagent-secrets
+          ports:
+            - name: http
+              containerPort: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
