@@ -32,6 +32,8 @@ controller:
       value: "http://10.243.150.36:7897"
     - name: NO_PROXY
       value: "127.0.0.1,localhost,::1,.svc,.cluster.local,10.42.0.0/16,10.43.0.0/16,10.243.0.0/16"
+    - name: JAVA_TOOL_OPTIONS
+      value: "-Dhttp.proxyHost=10.243.150.36 -Dhttp.proxyPort=7897 -Dhttps.proxyHost=10.243.150.36 -Dhttps.proxyPort=7897 -Dhttp.nonProxyHosts=localhost|127.0.0.1|*.svc|*.cluster.local|10.42.*|10.43.*|10.243.*"
   JCasC:
     defaultConfig: true
     overwriteConfiguration: false
