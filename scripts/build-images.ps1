@@ -15,6 +15,7 @@ function Get-TaxiAgentImageDefinitions {
         [PSCustomObject]@{ Name = 'taxiagent-ticket-service'; Type = 'java'; JarPath = "services/taxiagent-ticket-service/target/taxiagent-ticket-service-$version.jar" }
         [PSCustomObject]@{ Name = 'taxiagent-rag-service'; Type = 'java'; JarPath = "services/taxiagent-rag-service/target/taxiagent-rag-service-$version.jar" }
         [PSCustomObject]@{ Name = 'taxiagent-agent-service'; Type = 'java'; JarPath = "services/taxiagent-agent-service/target/taxiagent-agent-service-$version.jar" }
+        [PSCustomObject]@{ Name = 'taxiagent-client-service'; Type = 'frontend'; JarPath = $null }
     )
 }
 
@@ -41,6 +42,9 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $images = Get-TaxiAgentImageDefinitions
 
 foreach ($image in $images) {
+    if ($image.Type -eq 'frontend') {
+        continue
+    }
     $jar = Join-Path $repoRoot ($image.JarPath -replace '/', [IO.Path]::DirectorySeparatorChar)
     if (-not (Test-Path $jar)) {
         throw "Jar not found: $jar - run 'mvnw.cmd -DskipTests package' first"
@@ -50,7 +54,7 @@ foreach ($image in $images) {
 foreach ($image in $images) {
     $tag = "$Registry/taxiagent/$($image.Name):$Tag"
     if ($image.Type -eq 'frontend') {
-        $file = 'services/taxiagent-client-service/Dockerfile'
+        $file = Join-Path $repoRoot 'services/taxiagent-client-service/Dockerfile'
         $context = Join-Path $repoRoot 'services/taxiagent-client-service'
         & docker build --file $file --tag $tag $context
     }
