@@ -25,6 +25,11 @@ controller:
       value: "http://10.243.150.36:7897"
     - name: NO_PROXY
       value: "127.0.0.1,localhost,::1,.svc,.cluster.local,10.42.0.0/16,10.43.0.0/16,10.243.0.0/16,10.243.194.108"
+  initContainerEnv:
+    - name: JENKINS_UC
+      value: "https://mirrors.huaweicloud.com/jenkins/updates/"
+    - name: JENKINS_UC_DOWNLOAD_URL
+      value: "https://mirrors.huaweicloud.com/jenkins/updates/download"
   JCasC:
     defaultConfig: true
     overwriteConfiguration: false
