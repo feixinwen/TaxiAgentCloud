@@ -1,0 +1,15 @@
+debug = false
+
+[worker.oci]
+  enabled = true
+  gc = true
+  max-parallelism = 2
+
+  [[worker.oci.gcpolicy]]
+    keepBytes = 10737418240
+    filters = [type==source.local,type==exec.cachemount,type==source.git.checkout]
+
+[registry.'taxiagent-registry.registry.svc.cluster.local:5000']
+  http = true
+  insecure = true
+

@@ -1,0 +1,285 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: taxiagent-test-agent
+  namespace: jenkins
+  labels:
+    app.kubernetes.io/name: taxiagent-jenkins-agent
+    app.kubernetes.io/component: test
+    taxiagent.io/ci-data-access: 'true'
+spec:
+  serviceAccountName: jenkins
+  restartPolicy: Never
+  activeDeadlineSeconds: 3600
+  securityContext:
+    runAsNonRoot: true
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: jnlp
+      image: docker.io/jenkins/inbound-agent:3385.vf1123fb_515da_-1-jdk21
+      imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+          ephemeral-storage: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+          ephemeral-storage: 1Gi
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: [ALL]
+      volumeMounts:
+        - name: workspace
+          mountPath: /home/jenkins/agent
+    - name: maven
+      image: docker.io/library/maven:3.9.11-eclipse-temurin-21
+      imagePullPolicy: IfNotPresent
+      command: [cat]
+      tty: true
+      env:
+        - name: TAXIAGENT_CI_EXTERNAL_INFRA
+          value: 'true'
+        - name: CI_MYSQL_HOST
+          value: mysql.taxiagent-ci.svc.cluster.local
+        - name: CI_MYSQL_PORT
+          value: '3306'
+        - name: CI_MYSQL_ADMIN_USER
+          valueFrom:
+            secretKeyRef:
+              name: taxiagent-ci-secrets
+              key: CI_MYSQL_ADMIN_USER
+        - name: CI_MYSQL_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: taxiagent-ci-secrets
+              key: CI_MYSQL_ADMIN_PASSWORD
+        - name: CI_REDIS_HOST
+          value: redis.taxiagent-ci.svc.cluster.local
+        - name: CI_REDIS_PORT
+          value: '6379'
+        - name: CI_REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: taxiagent-ci-secrets
+              key: CI_REDIS_PASSWORD
+        - name: CI_MONGODB_USER
+          valueFrom:
+            secretKeyRef:
+              name: taxiagent-ci-secrets
+              key: CI_MONGODB_USER
+        - name: CI_MONGODB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: taxiagent-ci-secrets
+              key: CI_MONGODB_PASSWORD
+        - name: CI_MONGODB_URI
+          value: mongodb://$(CI_MONGODB_USER):$(CI_MONGODB_PASSWORD)@mongodb.taxiagent-ci.svc.cluster.local:27017/admin
+        - name: CI_ELASTICSEARCH_URL
+          value: http://elasticsearch.taxiagent-ci.svc.cluster.local:9200
+        - name: HTTP_PROXY
+          value: http://10.243.150.36:7897
+        - name: HTTPS_PROXY
+          value: http://10.243.150.36:7897
+        - name: NO_PROXY
+          value: localhost,127.0.0.1,.svc,.cluster.local,10.42.0.0/16,10.43.0.0/16,10.243.0.0/16,10.243.194.108
+      resources:
+        requests:
+          cpu: '1'
+          memory: 2Gi
+          ephemeral-storage: 4Gi
+        limits:
+          cpu: '4'
+          memory: 8Gi
+          ephemeral-storage: 20Gi
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: [ALL]
+      volumeMounts:
+        - name: workspace
+          mountPath: /home/jenkins/agent
+        - name: maven-cache
+          mountPath: /home/jenkins/.m2
+  volumes:
+    - name: workspace
+      emptyDir:
+        sizeLimit: 20Gi
+    - name: maven-cache
+      emptyDir:
+        sizeLimit: 10Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: taxiagent-build-agent
+  namespace: jenkins
+  labels:
+    app.kubernetes.io/name: taxiagent-jenkins-agent
+    app.kubernetes.io/component: build
+spec:
+  serviceAccountName: jenkins
+  restartPolicy: Never
+  activeDeadlineSeconds: 3600
+  securityContext:
+    runAsNonRoot: true
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: jnlp
+      image: docker.io/jenkins/inbound-agent:3385.vf1123fb_515da_-1-jdk21
+      imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+          ephemeral-storage: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+          ephemeral-storage: 1Gi
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: [ALL]
+      volumeMounts:
+        - name: workspace
+          mountPath: /home/jenkins/agent
+    - name: node
+      image: docker.io/library/node:22-bookworm-slim
+      imagePullPolicy: IfNotPresent
+      command: [cat]
+      tty: true
+      env:
+        - name: HTTP_PROXY
+          value: http://10.243.150.36:7897
+        - name: HTTPS_PROXY
+          value: http://10.243.150.36:7897
+        - name: NO_PROXY
+          value: localhost,127.0.0.1,.svc,.cluster.local,10.42.0.0/16,10.43.0.0/16,10.243.0.0/16,10.243.194.108
+      resources:
+        requests:
+          cpu: 500m
+          memory: 512Mi
+          ephemeral-storage: 2Gi
+        limits:
+          cpu: '2'
+          memory: 2Gi
+          ephemeral-storage: 8Gi
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: [ALL]
+      volumeMounts:
+        - name: workspace
+          mountPath: /home/jenkins/agent
+    - name: buildkitd
+      image: docker.io/moby/buildkit:v0.30.0-rootless
+      imagePullPolicy: IfNotPresent
+      args:
+        - --config
+        - /etc/buildkit/buildkitd.toml
+        - --addr
+        - unix:///run/user/1000/buildkit/buildkitd.sock
+        - --oci-worker-no-process-sandbox
+      env:
+        - name: BUILDKIT_HOST
+          value: unix:///run/user/1000/buildkit/buildkitd.sock
+        - name: BUILDKIT_CACHE_REF
+          value: taxiagent-registry.registry.svc.cluster.local:5000/taxiagent/buildcache
+        - name: HTTP_PROXY
+          value: http://10.243.150.36:7897
+        - name: HTTPS_PROXY
+          value: http://10.243.150.36:7897
+        - name: NO_PROXY
+          value: localhost,127.0.0.1,.svc,.cluster.local,10.42.0.0/16,10.43.0.0/16,10.243.0.0/16,10.243.194.108
+      readinessProbe:
+        exec:
+          command:
+            - buildctl
+            - --addr
+            - unix:///run/user/1000/buildkit/buildkitd.sock
+            - debug
+            - workers
+        initialDelaySeconds: 5
+        periodSeconds: 5
+        timeoutSeconds: 3
+        failureThreshold: 12
+      resources:
+        requests:
+          cpu: '1'
+          memory: 1Gi
+          ephemeral-storage: 8Gi
+        limits:
+          cpu: '4'
+          memory: 8Gi
+          ephemeral-storage: 30Gi
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        capabilities:
+          drop: [ALL]
+        seccompProfile:
+          type: Unconfined
+        appArmorProfile:
+          type: Unconfined
+      volumeMounts:
+        - name: workspace
+          mountPath: /home/jenkins/agent
+        - name: buildkit-config
+          mountPath: /etc/buildkit/buildkitd.toml
+          subPath: buildkitd.toml
+          readOnly: true
+        - name: buildkit-state
+          mountPath: /home/user/.local/share/buildkit
+        - name: buildkit-socket
+          mountPath: /run/user/1000/buildkit
+        - name: registry-auth
+          mountPath: /run/secrets/registry
+          readOnly: true
+    - name: kubectl
+      image: registry.k8s.io/kubectl:v1.36.4
+      imagePullPolicy: IfNotPresent
+      command: [cat]
+      tty: true
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+          ephemeral-storage: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+          ephemeral-storage: 1Gi
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: [ALL]
+      volumeMounts:
+        - name: workspace
+          mountPath: /home/jenkins/agent
+  volumes:
+    - name: workspace
+      emptyDir:
+        sizeLimit: 40Gi
+    - name: buildkit-config
+      configMap:
+        name: jenkins-buildkit-config
+    - name: buildkit-state
+      emptyDir:
+        sizeLimit: 20Gi
+    - name: buildkit-socket
+      emptyDir: {}
+    - name: registry-auth
+      secret:
+        secretName: jenkins-registry
+        items:
+          - key: username
+            path: username
+          - key: password
+            path: password
