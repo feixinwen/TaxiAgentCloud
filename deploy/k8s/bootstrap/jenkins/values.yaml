@@ -12,7 +12,9 @@ controller:
     - job-dsl
   admin:
     username: admin
-    createSecret: false
+    # createSecret also drives mounting existingSecret into the controller
+    # (chart-admin-username/chart-admin-password paths); false breaks admin login.
+    createSecret: true
     existingSecret: jenkins-admin
     userKey: jenkins-admin-user
     passwordKey: jenkins-admin-password
@@ -42,27 +44,33 @@ controller:
     configScripts:
       taxiagent-job: |-
         jobs:
-          - script: >
-              workflowJob('taxiagent-deploy') {
-                parameters {
-                  stringParam('GIT_REF', 'main', 'Git branch/tag/commit SHA to build and deploy')
-                  booleanParam('RUN_E2E', true, 'Run the non-billing E2E after deployment')
-                }
-                definition {
-                  cpsScm {
-                    scm {
-                      git {
-                        remote {
-                          url('https://github.com/feixinwen/TaxiAgentCloud.git')
+          - script: |-
+              import javaposse.jobdsl.dsl.DslScriptLoader
+              import javaposse.jobdsl.plugin.JenkinsJobManagement
+
+              def jobManagement = new JenkinsJobManagement(System.out, [:], new File('.'))
+              new DslScriptLoader(jobManagement).runScript('''
+                pipelineJob('taxiagent-deploy') {
+                  parameters {
+                    stringParam('GIT_REF', 'main', 'Git branch/tag/commit SHA to build and deploy')
+                    booleanParam('RUN_E2E', true, 'Run the non-billing E2E after deployment')
+                  }
+                  definition {
+                    cpsScm {
+                      scm {
+                        git {
+                          remote {
+                            url('https://github.com/feixinwen/TaxiAgentCloud.git')
+                          }
+                          branches('main')
                         }
-                        branches('main')
                       }
+                      scriptPath('Jenkinsfile')
+                      lightweight(true)
                     }
-                    scriptPath('Jenkinsfile')
-                    lightweight(true)
                   }
                 }
-              }
+              ''')
 persistence:
   enabled: true
   size: "10Gi"

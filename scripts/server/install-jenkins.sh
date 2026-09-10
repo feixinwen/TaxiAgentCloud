@@ -74,7 +74,7 @@ helm upgrade --install jenkins "$CHART_NAME" --version "$CHART_VERSION" \
   --namespace "$NAMESPACE" --create-namespace \
   --values "$VALUES_FILE" --timeout 15m --wait
 
-k3s kubectl rollout status deployment/jenkins -n "$NAMESPACE" --timeout=300s >/dev/null
+k3s kubectl rollout status statefulset/jenkins -n "$NAMESPACE" --timeout=300s >/dev/null
 log "waiting for HTTP readiness on port 30080"
 for _ in $(seq 1 30); do
   code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$JENKINS_URL/login" 2>/dev/null || true)"

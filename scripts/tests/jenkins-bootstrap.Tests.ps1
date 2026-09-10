@@ -43,6 +43,12 @@ Describe 'Jenkins controller values' {
         $v | Should -Match 'RUN_E2E'
         $v | Should -Match 'Jenkinsfile'
     }
+
+    It 'executes Job DSL through DslScriptLoader, not bare workflowJob' {
+        $v = Get-Content -Raw $values
+        $v | Should -Match 'DslScriptLoader'
+        $v | Should -Match 'JenkinsJobManagement'
+    }
 }
 
 Describe 'Jenkins RBAC' {
@@ -67,7 +73,7 @@ Describe 'install-jenkins.sh' {
         $s = Get-Content -Raw $install
         $s | Should -Match 'helm upgrade --install'
         $s | Should -Match 'CHART_VERSION="5\.9\.53"'
-        $s | Should -Match 'rollout status'
+        $s | Should -Match 'rollout status statefulset/jenkins'
         $s | Should -Match '30080'
     }
 
