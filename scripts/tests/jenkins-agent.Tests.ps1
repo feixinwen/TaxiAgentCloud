@@ -4,6 +4,7 @@ BeforeAll {
     $buildkitConfig = Join-Path $repoRoot 'deploy/jenkins/buildkitd.toml'
     $buildkitKustomization = Join-Path $repoRoot 'deploy/jenkins/kustomization.yaml'
     $install = Join-Path $repoRoot 'scripts/server/install-jenkins.sh'
+    $cacheImages = Join-Path $repoRoot 'scripts/server/cache-jenkins-agent-images.sh'
 }
 
 Describe 'Jenkins dynamic agent templates' {
@@ -33,13 +34,14 @@ Describe 'Jenkins dynamic agent templates' {
         $buildAgent | Should -Not -Match 'taxiagent-ci\.svc\.cluster\.local'
     }
 
-    It 'pins the required Java Node BuildKit kubectl and inbound agent images' {
+    It 'pins Docker Hub tools to the internal registry and other required images' {
         $yaml = Get-Content -Raw $agentPod
-        $yaml | Should -Match 'jenkins/inbound-agent:3385\.vf1123fb_515da_-1-jdk21'
-        $yaml | Should -Match 'maven:3\.9\.11-eclipse-temurin-21'
-        $yaml | Should -Match 'node:22-bookworm-slim'
+        ([regex]::Matches($yaml, '10\.243\.194\.108:30500/taxiagent-ci/jenkins-inbound-agent:3385\.vf1123fb_515da_-1-jdk21')).Count | Should -Be 2
+        $yaml | Should -Match '10\.243\.194\.108:30500/taxiagent-ci/maven:3\.9\.11-eclipse-temurin-21'
+        $yaml | Should -Match '10\.243\.194\.108:30500/taxiagent-ci/node:22-bookworm-slim'
         $yaml | Should -Match 'moby/buildkit:v0\.30\.0-rootless'
         $yaml | Should -Match 'registry\.k8s\.io/kubectl:v1\.36\.4'
+        $yaml | Should -Not -Match 'image:\s*docker\.io/(?:jenkins/inbound-agent|library/(?:maven|node))'
     }
 
     It 'shares a bounded workspace and resource limits in every container' {
@@ -78,6 +80,22 @@ Describe 'Jenkins dynamic agent templates' {
         $yaml | Should -Match '10\.43\.0\.0/16'
         $yaml | Should -Match '10\.243\.0\.0/16'
         $yaml | Should -Match '\.svc,\.cluster\.local'
+    }
+}
+
+Describe 'Jenkins agent image cache' {
+    It 'mirrors every Docker Hub agent image through the approved source' {
+        Test-Path $cacheImages | Should -BeTrue
+        $script = Get-Content -Raw $cacheImages
+
+        $script | Should -Match 'SOURCE_REGISTRY=.*docker\.1panel\.live'
+        $script | Should -Match 'jenkins/inbound-agent:3385\.vf1123fb_515da_-1-jdk21'
+        $script | Should -Match 'library/maven:3\.9\.11-eclipse-temurin-21'
+        $script | Should -Match 'library/node:22-bookworm-slim'
+        $script | Should -Match 'PUSH_REGISTRY=.*localhost:30500'
+        $script | Should -Match 'TARGET_REPOSITORY=.*taxiagent-ci'
+        $script | Should -Match 'docker push'
+        $script | Should -Not -Match '(?i)password\s*='
     }
 }
 

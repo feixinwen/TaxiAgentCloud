@@ -18,7 +18,7 @@ spec:
       type: RuntimeDefault
   containers:
     - name: jnlp
-      image: docker.io/jenkins/inbound-agent:3385.vf1123fb_515da_-1-jdk21
+      image: 10.243.194.108:30500/taxiagent-ci/jenkins-inbound-agent:3385.vf1123fb_515da_-1-jdk21
       imagePullPolicy: IfNotPresent
       resources:
         requests:
@@ -37,7 +37,7 @@ spec:
         - name: workspace
           mountPath: /home/jenkins/agent
     - name: maven
-      image: docker.io/library/maven:3.9.11-eclipse-temurin-21
+      image: 10.243.194.108:30500/taxiagent-ci/maven:3.9.11-eclipse-temurin-21
       imagePullPolicy: IfNotPresent
       command: [cat]
       tty: true
@@ -132,7 +132,7 @@ spec:
       type: RuntimeDefault
   containers:
     - name: jnlp
-      image: docker.io/jenkins/inbound-agent:3385.vf1123fb_515da_-1-jdk21
+      image: 10.243.194.108:30500/taxiagent-ci/jenkins-inbound-agent:3385.vf1123fb_515da_-1-jdk21
       imagePullPolicy: IfNotPresent
       resources:
         requests:
@@ -151,7 +151,7 @@ spec:
         - name: workspace
           mountPath: /home/jenkins/agent
     - name: node
-      image: docker.io/library/node:22-bookworm-slim
+      image: 10.243.194.108:30500/taxiagent-ci/node:22-bookworm-slim
       imagePullPolicy: IfNotPresent
       command: [cat]
       tty: true
