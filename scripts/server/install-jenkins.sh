@@ -64,6 +64,8 @@ else
 fi
 
 # ---------- deploy ----------
+log 'applying Jenkins RBAC'
+k3s kubectl apply -k ${VALUES_FILE%/*}
 export HTTPS_PROXY="${HTTPS_PROXY:-http://10.243.150.36:7897}"
 export HTTP_PROXY="${HTTP_PROXY:-http://10.243.150.36:7897}"
 export NO_PROXY="${NO_PROXY:-127.0.0.1,localhost,.svc,.cluster.local,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}"

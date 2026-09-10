@@ -71,6 +71,7 @@ Describe 'Jenkins RBAC' {
 Describe 'install-jenkins.sh' {
     It 'installs the pinned chart and waits for readiness' {
         $s = Get-Content -Raw $install
+        $s | Should -Match 'kubectl apply -k'
         $s | Should -Match 'helm upgrade --install'
         $s | Should -Match 'CHART_VERSION="5\.9\.53"'
         $s | Should -Match 'rollout status statefulset/jenkins'
