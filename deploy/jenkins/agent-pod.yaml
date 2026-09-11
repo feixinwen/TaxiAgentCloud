@@ -187,7 +187,7 @@ spec:
         - name: workspace
           mountPath: /home/jenkins/agent
     - name: buildkitd
-      image: docker.io/moby/buildkit:v0.30.0-rootless
+      image: 10.243.194.108:30500/taxiagent-ci/buildkit:v0.30.0-rootless
       imagePullPolicy: IfNotPresent
       args:
         - --config

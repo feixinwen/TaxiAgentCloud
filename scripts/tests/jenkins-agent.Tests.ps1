@@ -39,7 +39,7 @@ Describe 'Jenkins dynamic agent templates' {
         ([regex]::Matches($yaml, '10\.243\.194\.108:30500/taxiagent-ci/jenkins-inbound-agent:3385\.vf1123fb_515da_-1-jdk21')).Count | Should -Be 2
         $yaml | Should -Match '10\.243\.194\.108:30500/taxiagent-ci/maven:3\.9\.11-eclipse-temurin-21'
         $yaml | Should -Match '10\.243\.194\.108:30500/taxiagent-ci/node:22-bookworm-slim'
-        $yaml | Should -Match 'moby/buildkit:v0\.30\.0-rootless'
+        $yaml | Should -Match '10\.243\.194\.108:30500/taxiagent-ci/buildkit:v0\.30\.0-rootless'
         $yaml | Should -Match 'registry\.k8s\.io/kubectl:v1\.36\.4'
         $yaml | Should -Not -Match 'image:\s*docker\.io/(?:jenkins/inbound-agent|library/(?:maven|node))'
     }
@@ -93,6 +93,7 @@ Describe 'Jenkins agent image cache' {
         $script | Should -Match 'jenkins/inbound-agent:3385\.vf1123fb_515da_-1-jdk21'
         $script | Should -Match 'library/maven:3\.9\.11-eclipse-temurin-21'
         $script | Should -Match 'library/node:22-bookworm-slim'
+        $script | Should -Match 'moby/buildkit:v0\.30\.0-rootless'
         $script | Should -Match 'PUSH_REGISTRY=.*localhost:30500'
         $script | Should -Match 'TARGET_REPOSITORY=.*taxiagent-ci'
         $script | Should -Match 'PULL_TIMEOUT_SECONDS=.*600'

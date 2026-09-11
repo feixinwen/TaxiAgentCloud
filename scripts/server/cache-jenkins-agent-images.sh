@@ -19,6 +19,7 @@ IMAGES=(
   'jenkins/inbound-agent:3385.vf1123fb_515da_-1-jdk21|jenkins-inbound-agent:3385.vf1123fb_515da_-1-jdk21'
   'library/maven:3.9.11-eclipse-temurin-21|maven:3.9.11-eclipse-temurin-21'
   'library/node:22-bookworm-slim|node:22-bookworm-slim'
+  'moby/buildkit:v0.30.0-rootless|buildkit:v0.30.0-rootless'
 )
 
 for mapping in "${IMAGES[@]}"; do
