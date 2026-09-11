@@ -52,6 +52,12 @@ Describe 'Jenkins dynamic agent templates' {
         ([regex]::Matches($yaml, 'emptyDir:')).Count | Should -BeGreaterOrEqual 3
     }
 
+    It 'keeps the minimal kubectl image alive without requiring a shell' {
+        $yaml = Get-Content -Raw $agentPod
+        $yaml | Should -Match 'name:\s*kubectl[\s\S]*command:\s*\[kubectl\]'
+        $yaml | Should -Match 'name:\s*kubectl[\s\S]*- proxy[\s\S]*- --address=127\.0\.0\.1'
+    }
+
     It 'uses rootless BuildKit without Docker socket or privileged containers' {
         $yaml = Get-Content -Raw $agentPod
         $yaml | Should -Match 'runAsNonRoot:\s*true'

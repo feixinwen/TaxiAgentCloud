@@ -253,8 +253,11 @@ spec:
     - name: kubectl
       image: registry.k8s.io/kubectl:v1.36.4
       imagePullPolicy: IfNotPresent
-      command: [cat]
-      tty: true
+      command: [kubectl]
+      args:
+        - proxy
+        - --address=127.0.0.1
+        - --port=8001
       resources:
         requests:
           cpu: 100m
