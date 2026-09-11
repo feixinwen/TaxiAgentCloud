@@ -94,6 +94,8 @@ Describe 'Jenkins agent image cache' {
         $script | Should -Match 'library/node:22-bookworm-slim'
         $script | Should -Match 'PUSH_REGISTRY=.*localhost:30500'
         $script | Should -Match 'TARGET_REPOSITORY=.*taxiagent-ci'
+        $script | Should -Match 'PULL_TIMEOUT_SECONDS=.*600'
+        $script | Should -Match 'timeout.*PULL_TIMEOUT_SECONDS.*docker pull'
         $script | Should -Match 'docker push'
         $script | Should -Not -Match '(?i)password\s*='
     }

@@ -6,11 +6,13 @@ set -Eeuo pipefail
 SOURCE_REGISTRY="${SOURCE_REGISTRY:-docker.1panel.live}"
 PUSH_REGISTRY="${PUSH_REGISTRY:-localhost:30500}"
 TARGET_REPOSITORY="${TARGET_REPOSITORY:-taxiagent-ci}"
+PULL_TIMEOUT_SECONDS="${PULL_TIMEOUT_SECONDS:-600}"
 
 log() { printf '[jenkins-agent-images] %s\n' "$*"; }
 die() { printf '[jenkins-agent-images] ERROR: %s\n' "$*" >&2; exit 1; }
 
 command -v docker >/dev/null || die 'docker command missing'
+command -v timeout >/dev/null || die 'timeout command missing'
 docker info >/dev/null 2>&1 || die 'docker daemon unavailable'
 
 IMAGES=(
@@ -26,7 +28,9 @@ for mapping in "${IMAGES[@]}"; do
   target_image="${PUSH_REGISTRY}/${TARGET_REPOSITORY}/${target_path}"
 
   log "caching ${source_path}"
-  docker pull "$source_image"
+  if ! timeout "$PULL_TIMEOUT_SECONDS" docker pull "$source_image"; then
+    die "pull timed out or failed for ${source_path}"
+  fi
   docker tag "$source_image" "$target_image"
   docker push "$target_image"
 done
