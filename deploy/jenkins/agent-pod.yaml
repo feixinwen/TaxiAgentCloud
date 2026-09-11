@@ -30,6 +30,8 @@ spec:
           memory: 512Mi
           ephemeral-storage: 1Gi
       securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
         allowPrivilegeEscalation: false
         capabilities:
           drop: [ALL]
@@ -97,6 +99,8 @@ spec:
           memory: 8Gi
           ephemeral-storage: 20Gi
       securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
         allowPrivilegeEscalation: false
         capabilities:
           drop: [ALL]
@@ -144,6 +148,8 @@ spec:
           memory: 512Mi
           ephemeral-storage: 1Gi
       securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
         allowPrivilegeEscalation: false
         capabilities:
           drop: [ALL]
@@ -172,6 +178,8 @@ spec:
           memory: 2Gi
           ephemeral-storage: 8Gi
       securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
         allowPrivilegeEscalation: false
         capabilities:
           drop: [ALL]
@@ -257,6 +265,8 @@ spec:
           memory: 512Mi
           ephemeral-storage: 1Gi
       securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
         allowPrivilegeEscalation: false
         capabilities:
           drop: [ALL]

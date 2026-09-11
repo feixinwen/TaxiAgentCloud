@@ -55,7 +55,8 @@ Describe 'Jenkins dynamic agent templates' {
     It 'uses rootless BuildKit without Docker socket or privileged containers' {
         $yaml = Get-Content -Raw $agentPod
         $yaml | Should -Match 'runAsNonRoot:\s*true'
-        $yaml | Should -Match 'runAsUser:\s*1000'
+        ([regex]::Matches($yaml, 'runAsUser:\s*1000')).Count | Should -Be 6
+        ([regex]::Matches($yaml, 'runAsGroup:\s*1000')).Count | Should -Be 6
         $yaml | Should -Match 'oci-worker-no-process-sandbox'
         $yaml | Should -Match 'seccompProfile:\s*\r?\n\s+type:\s*Unconfined'
         $yaml | Should -Not -Match 'privileged:\s*true'
